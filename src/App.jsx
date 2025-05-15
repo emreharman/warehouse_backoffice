@@ -4,7 +4,10 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Placeholder sayfalar (ileride kendi dosyalarına bölünecek)
+// Sayfa bileşenleri
+import Categories from "./pages/Categories"; // gerçek kategori bileşenini ekledik
+
+// Placeholder sayfa (diğerleri henüz hazır değilse böyle bırakabilirsin)
 const Dashboard = () => (
   <div className="bg-white border rounded-lg p-6 shadow-sm">
     <h1 className="text-2xl font-bold mb-2 text-gray-800">Hoş Geldin 👋</h1>
@@ -12,7 +15,6 @@ const Dashboard = () => (
   </div>
 );
 
-const Categories = () => <h2>Kategori Sayfası</h2>;
 const Products = () => <h2>Ürünler Sayfası</h2>;
 const Orders = () => <h2>Siparişler Sayfası</h2>;
 
