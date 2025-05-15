@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getCategories,
   addCategory,
+  editCategory,
   removeCategory,
 } from "../redux/actions/categoryActions";
 import Button from "../components/Button";
@@ -19,6 +20,7 @@ const Categories = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [updateMode, setUpdateMode] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -36,14 +38,16 @@ const Categories = () => {
     }));
   };
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
     const name = formData.name.trim();
     const description = formData.description.trim();
 
     if (!name) return;
 
     const alreadyExists = categories.some(
-      (cat) => cat.name.trim().toLowerCase() === name.toLowerCase()
+      (cat) =>
+        cat.name.trim().toLowerCase() === name.toLowerCase() &&
+        cat._id !== (selectedCategory?._id || "")
     );
 
     if (alreadyExists) {
@@ -51,9 +55,26 @@ const Categories = () => {
       return;
     }
 
-    await dispatch(addCategory({ name, description }));
+    if (updateMode && selectedCategory) {
+      await dispatch(editCategory(selectedCategory._id, { name, description }));
+    } else {
+      await dispatch(addCategory({ name, description }));
+    }
+
     setFormData({ name: "", description: "" });
     setModalOpen(false);
+    setUpdateMode(false);
+    setSelectedCategory(null);
+  };
+
+  const handleEdit = (category) => {
+    setFormData({
+      name: category.name,
+      description: category.description || "",
+    });
+    setSelectedCategory(category);
+    setUpdateMode(true);
+    setModalOpen(true);
   };
 
   const confirmDelete = (category) => {
@@ -73,7 +94,16 @@ const Categories = () => {
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold text-gray-800">Kategoriler</h1>
-        <Button onClick={() => setModalOpen(true)}>+ Yeni Kategori</Button>
+        <Button
+          onClick={() => {
+            setModalOpen(true);
+            setUpdateMode(false);
+            setFormData({ name: "", description: "" });
+            setSelectedCategory(null);
+          }}
+        >
+          + Yeni Kategori
+        </Button>
       </div>
 
       {loading && <LoadingSpinner />}
@@ -104,7 +134,9 @@ const Categories = () => {
                   </td>
                   <td className="px-4 py-2 text-gray-500">{category._id}</td>
                   <td className="px-4 py-2 text-right space-x-2">
-                    <Button variant="soft" size="sm">Düzenle</Button>
+                    <Button variant="soft" size="sm" onClick={() => handleEdit(category)}>
+                      Düzenle
+                    </Button>
                     <Button
                       variant="danger"
                       size="sm"
@@ -121,12 +153,17 @@ const Categories = () => {
       )}
 
       {/* --------------------------- */}
-      {/* Modal: Yeni Kategori Ekleme */}
+      {/* Modal: Oluştur / Güncelle */}
       {/* --------------------------- */}
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Yeni Kategori Oluştur"
+        onClose={() => {
+          setModalOpen(false);
+          setUpdateMode(false);
+          setSelectedCategory(null);
+          setFormData({ name: "", description: "" });
+        }}
+        title={updateMode ? "Kategoriyi Güncelle" : "Yeni Kategori Oluştur"}
       >
         <div className="space-y-5">
           <div>
@@ -159,7 +196,9 @@ const Categories = () => {
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               İptal
             </Button>
-            <Button onClick={handleCreate}>Oluştur</Button>
+            <Button onClick={handleSubmit}>
+              {updateMode ? "Güncelle" : "Oluştur"}
+            </Button>
           </div>
         </div>
       </Modal>
