@@ -1,35 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import DashboardLayout from "./layouts/DashboardLayout";
+import Login from "./pages/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+// Placeholder sayfalar (ileride kendi dosyalarına bölünecek)
+const Dashboard = () => (
+  <div className="bg-white border rounded-lg p-6 shadow-sm">
+    <h1 className="text-2xl font-bold mb-2 text-gray-800">Hoş Geldin 👋</h1>
+    <p className="text-gray-600">Siparişleri ve içerikleri buradan yönetebilirsin.</p>
+  </div>
+);
+
+const Categories = () => <h2>Kategori Sayfası</h2>;
+const Products = () => <h2>Ürünler Sayfası</h2>;
+const Orders = () => <h2>Siparişler Sayfası</h2>;
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Navigate to="/dashboard" />} />
+
+      {/* Korunan rotalar */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Dashboard />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/categories"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Categories />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/products"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Products />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Orders />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
 }
 
-export default App
+export default App;
