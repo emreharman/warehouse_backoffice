@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // Sayfa bileşenleri
 import Categories from "./pages/Categories"; // gerçek kategori bileşenini ekledik
+import Products from "./pages/Products";
 
 // Placeholder sayfa (diğerleri henüz hazır değilse böyle bırakabilirsin)
 const Dashboard = () => (
@@ -14,8 +15,6 @@ const Dashboard = () => (
     <p className="text-gray-600">Siparişleri ve içerikleri buradan yönetebilirsin.</p>
   </div>
 );
-
-const Products = () => <h2>Ürünler Sayfası</h2>;
 const Orders = () => <h2>Siparişler Sayfası</h2>;
 
 function App() {
