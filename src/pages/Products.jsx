@@ -153,16 +153,16 @@ const Products = () => {
             <tbody className="divide-y divide-gray-100">
               {products.map((product, index) => (
                 <tr key={product._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2">{index + 1}</td>
-                  <td className="px-4 py-2">{product.name}</td>
-                  <td className="px-4 py-2">{product.category?.name || "-"}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2 text-gray-700">{index + 1}</td>
+                  <td className="px-4 py-2 text-gray-700">{product.name}</td>
+                  <td className="px-4 py-2 text-gray-700">{product.category?.name || "-"}</td>
+                  <td className="px-4 py-2 text-gray-700">
                     {product.variants?.[0]?.price ?? "-"} ₺
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2 text-gray-700">
                     {product.variants?.[0]?.stock ?? "-"}
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2 text-gray-700">
                     <div className="flex flex-wrap gap-2">
                       {product.images?.map((url, idx) => (
                         <img
