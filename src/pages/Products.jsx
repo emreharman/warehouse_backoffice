@@ -6,6 +6,7 @@ import {
   removeProduct,
 } from "../redux/actions/productActions";
 import { getCategories } from "../redux/actions/categoryActions";
+import { uploadProductImage } from "../utils/uploadImage";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -29,7 +30,12 @@ const Products = () => {
     category: "",
     price: "",
     stock: "",
+    images: [],
+    description: "",
+    tags: "",
   });
+
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     dispatch(getProducts());
@@ -37,16 +43,42 @@ const Products = () => {
   }, [dispatch]);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
   };
 
-  const handleCreate = async () => {
-    const { name, category, price, stock } = formData;
+  const handleFilesChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    if (!name.trim() || !category || !price || !stock) return;
+    setUploading(true);
+    try {
+      const urls = [];
+      for (const file of files) {
+        const url = await uploadProductImage(file);
+        urls.push(url);
+      }
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...urls],
+      }));
+    } catch (error) {
+      alert("Resim yüklenirken hata oluştu: " + error.message);
+    }
+    setUploading(false);
+  };
+
+  const handleCreate = async () => {
+    const { name, category, price, stock, images, description, tags } =
+      formData;
+
+    if (!name.trim() || !category || !price || !stock) {
+      alert("Lütfen zorunlu alanları doldurun.");
+      return;
+    }
 
     const payload = {
       name: name.trim(),
@@ -57,10 +89,24 @@ const Products = () => {
           stock: parseInt(stock),
         },
       ],
+      images,
+      description: description.trim(),
+      tags: tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0),
     };
 
     await dispatch(addProduct(payload));
-    setFormData({ name: "", category: "", price: "", stock: "" });
+    setFormData({
+      name: "",
+      category: "",
+      price: "",
+      stock: "",
+      images: [],
+      description: "",
+      tags: "",
+    });
     setModalOpen(false);
   };
 
@@ -100,6 +146,7 @@ const Products = () => {
                 <th className="px-4 py-2">Kategori</th>
                 <th className="px-4 py-2">Fiyat</th>
                 <th className="px-4 py-2">Stok</th>
+                <th className="px-4 py-2">Resimler</th>
                 <th className="px-4 py-2 text-right">İşlemler</th>
               </tr>
             </thead>
@@ -115,12 +162,24 @@ const Products = () => {
                   <td className="px-4 py-2">
                     {product.variants?.[0]?.stock ?? "-"}
                   </td>
+                  <td className="px-4 py-2">
+                    <div className="flex flex-wrap gap-2">
+                      {product.images?.map((url, idx) => (
+                        <img
+                          key={idx}
+                          src={url}
+                          alt={`${product.name} ${idx + 1}`}
+                          className="h-16 w-16 object-cover rounded"
+                        />
+                      ))}
+                      {!product.images?.length && "-"}
+                    </div>
+                  </td>
                   <td className="px-4 py-2 text-right">
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() => confirmDelete(product)}
-                    >
+                      onClick={() => confirmDelete(product)}>
                       Sil
                     </Button>
                   </td>
@@ -136,35 +195,49 @@ const Products = () => {
         isOpen={modalOpen}
         onClose={() => {
           setModalOpen(false);
-          setFormData({ name: "", category: "", price: "", stock: "" });
+          setFormData({
+            name: "",
+            category: "",
+            price: "",
+            stock: "",
+            images: [],
+            description: "",
+            tags: "",
+          });
         }}
-        title="Yeni Ürün Ekle"
-      >
+        title="Yeni Ürün Ekle">
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ürün Adı
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="name">
+              Ürün Adı <span className="text-red-500">*</span>
             </label>
             <input
+              id="name"
               type="text"
               name="name"
               placeholder="Örn: Basic T-shirt"
               value={formData.name}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Kategori
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="category">
+              Kategori <span className="text-red-500">*</span>
             </label>
             <select
+              id="category"
               name="category"
               value={formData.category}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-            >
+              required>
               <option value="">Seçiniz</option>
               {categories.map((cat) => (
                 <option key={cat._id} value={cat._id}>
@@ -176,37 +249,112 @@ const Products = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fiyat (₺)
+              <label
+                className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="price">
+                Fiyat (₺) <span className="text-red-500">*</span>
               </label>
               <input
+                id="price"
                 type="number"
                 name="price"
                 value={formData.price}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Stok
+              <label
+                className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="stock">
+                Stok <span className="text-red-500">*</span>
               </label>
               <input
+                id="stock"
                 type="number"
                 name="stock"
                 value={formData.stock}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                required
               />
             </div>
+          </div>
+
+          <div>
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="images">
+              Ürün Resimleri
+            </label>
+            <input
+              id="images"
+              type="file"
+              accept=".jpg, .jpeg, .png"
+              multiple
+              onChange={handleFilesChange}
+              disabled={uploading}
+              className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            />
+            {uploading && (
+              <p className="text-sm text-blue-600 mt-1">Yükleniyor...</p>
+            )}
+            {formData.images.length > 0 && !uploading && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.images.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`Ürün resmi ${idx + 1}`}
+                    className="h-20 w-20 object-cover rounded"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="description">
+              Açıklama
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            />
+          </div>
+
+          <div>
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="tags">
+              Etiketler (virgülle ayır)
+            </label>
+            <input
+              id="tags"
+              type="text"
+              name="tags"
+              placeholder="örneğin: erkek, yaz, spor"
+              value={formData.tags}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               İptal
             </Button>
-            <Button onClick={handleCreate}>Ekle</Button>
+            <Button onClick={handleCreate} disabled={uploading}>
+              Ekle
+            </Button>
           </div>
         </div>
       </Modal>
@@ -215,8 +363,7 @@ const Products = () => {
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Ürünü Sil"
-      >
+        title="Ürünü Sil">
         <p className="text-gray-700 mb-4">
           <strong>{selectedProduct?.name}</strong> adlı ürünü silmek
           istediğinize emin misiniz?
