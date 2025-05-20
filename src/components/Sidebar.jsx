@@ -21,6 +21,7 @@ const Sidebar = ({ onClose }) => {
         <NavLink to="/categories" className={linkClasses} onClick={handleClick}>Kategoriler</NavLink>
         <NavLink to="/products" className={linkClasses} onClick={handleClick}>Ürünler</NavLink>
         <NavLink to="/orders" className={linkClasses} onClick={handleClick}>Siparişler</NavLink>
+        <NavLink to="/variant-options" className={linkClasses} onClick={handleClick}>Varyant Seçenekleri</NavLink>
       </nav>
     </aside>
   );

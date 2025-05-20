@@ -5,10 +5,10 @@ import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Sayfa bileşenleri
-import Categories from "./pages/Categories"; // gerçek kategori bileşenini ekledik
+import Categories from "./pages/Categories";
 import Products from "./pages/Products";
+import VariantOptions from "./pages/VariantOptions"; // ✅ yeni sayfa import
 
-// Placeholder sayfa (diğerleri henüz hazır değilse böyle bırakabilirsin)
 const Dashboard = () => (
   <div className="bg-white border rounded-lg p-6 shadow-sm">
     <h1 className="text-2xl font-bold mb-2 text-gray-800">Hoş Geldin 👋</h1>
@@ -60,6 +60,16 @@ function App() {
           <ProtectedRoute>
             <DashboardLayout>
               <Orders />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/variant-options"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <VariantOptions />
             </DashboardLayout>
           </ProtectedRoute>
         }

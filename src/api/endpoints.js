@@ -6,7 +6,8 @@ const ENDPOINTS = {
     CATEGORIES: '/categories',
     PRODUCTS: '/products',
     ORDERS: '/orders',
-    CUSTOMERS: '/customers'
+    CUSTOMERS: '/customers',
+    VARIANT_OPTIONS: '/variant-options',
   };
   
   export default ENDPOINTS;
