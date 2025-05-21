@@ -1,13 +1,16 @@
 import api from './axiosInstance';
 import ENDPOINTS from './endpoints';
 
-export const fetchVariantOptions = () => api.get(ENDPOINTS.VARIANT_OPTIONS);
+export const fetchVariantOptions = () => api.get('/variant-options');
+
+export const getVariantOption = (id) =>
+  api.get(`/variant-options/${id}`);
 
 export const createVariantOption = (data) =>
-  api.post(ENDPOINTS.VARIANT_OPTIONS, data);
+  api.post('/variant-options', data);
 
 export const updateVariantOption = (id, data) =>
-  api.put(`${ENDPOINTS.VARIANT_OPTIONS}/${id}`, data);
+  api.put(`/variant-options/${id}`, data);
 
 export const deleteVariantOption = (id) =>
-  api.delete(`${ENDPOINTS.VARIANT_OPTIONS}/${id}`);
+  api.delete(`/variant-options/${id}`);

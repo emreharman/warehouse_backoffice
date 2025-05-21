@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getVariantOptions,
   addVariantOption,
+  editVariantOption,
   removeVariantOption,
 } from "../redux/actions/variantOptionActions";
 import Button from "../components/Button";
@@ -11,6 +12,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 
 const VariantOptions = () => {
   const dispatch = useDispatch();
+
   const { data: variantOptions, loading, error } = useSelector(
     (state) => state.variantOptions
   );
@@ -18,6 +20,8 @@ const VariantOptions = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [updateMode, setUpdateMode] = useState(false);
+
   const [formData, setFormData] = useState({
     type: "",
     name: "",
@@ -32,14 +36,47 @@ const VariantOptions = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCreate = async () => {
-    if (!formData.name.trim() || !formData.type) {
+  const handleSubmit = async () => {
+    const name = formData.name.trim();
+    const type = formData.type;
+
+    if (!name || !type) {
       alert("Lütfen tüm alanları doldurun.");
       return;
     }
-    await dispatch(addVariantOption(formData));
+
+    const alreadyExists = variantOptions.some(
+      (opt) =>
+        opt.name.trim().toLowerCase() === name.toLowerCase() &&
+        opt.type === type &&
+        opt._id !== (selectedOption?._id || "")
+    );
+
+    if (alreadyExists) {
+      alert("Bu isimde bir varyant zaten var.");
+      return;
+    }
+
+    if (updateMode && selectedOption) {
+      await dispatch(editVariantOption(selectedOption._id, { name, type }));
+    } else {
+      await dispatch(addVariantOption({ name, type }));
+    }
+
     setFormData({ type: "", name: "" });
     setModalOpen(false);
+    setUpdateMode(false);
+    setSelectedOption(null);
+  };
+
+  const handleEdit = (option) => {
+    setFormData({
+      name: option.name,
+      type: option.type,
+    });
+    setSelectedOption(option);
+    setUpdateMode(true);
+    setModalOpen(true);
   };
 
   const confirmDelete = (option) => {
@@ -58,8 +95,19 @@ const VariantOptions = () => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-gray-800">Varyant Seçenekleri</h1>
-        <Button onClick={() => setModalOpen(true)}>+ Yeni Seçenek</Button>
+        <h1 className="text-xl font-semibold text-gray-800">
+          Varyant Seçenekleri
+        </h1>
+        <Button
+          onClick={() => {
+            setModalOpen(true);
+            setUpdateMode(false);
+            setFormData({ name: "", type: "" });
+            setSelectedOption(null);
+          }}
+        >
+          + Yeni Seçenek
+        </Button>
       </div>
 
       {loading && <LoadingSpinner />}
@@ -76,20 +124,22 @@ const VariantOptions = () => {
                 <th className="px-4 py-2">#</th>
                 <th className="px-4 py-2">Tip</th>
                 <th className="px-4 py-2">Ad</th>
+                <th className="px-4 py-2">ID</th>
                 <th className="px-4 py-2 text-right">İşlemler</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {variantOptions.map((option, index) => (
                 <tr key={option._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-gray-700">{index + 1}</td>
-                  <td className="px-4 py-2 text-gray-700 capitalize">{option.type}</td>
-                  <td className="px-4 py-2 text-gray-700">{option.name}</td>
-                  <td className="px-4 py-2 text-right">
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => confirmDelete(option)}>
+                  <td className="px-4 py-2 text-gray-600">{index + 1}</td>
+                  <td className="px-4 py-2 text-gray-600 capitalize">{option.type}</td>
+                  <td className="px-4 py-2 text-gray-600">{option.name}</td>
+                  <td className="px-4 py-2 text-gray-500">{option._id}</td>
+                  <td className="px-4 py-2 text-right space-x-2">
+                    <Button variant="soft" size="sm" onClick={() => handleEdit(option)}>
+                      Düzenle
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => confirmDelete(option)}>
                       Sil
                     </Button>
                   </td>
@@ -100,23 +150,28 @@ const VariantOptions = () => {
         </div>
       )}
 
+      {/* Modal: Oluştur / Güncelle */}
       <Modal
         isOpen={modalOpen}
         onClose={() => {
           setModalOpen(false);
-          setFormData({ type: "", name: "" });
+          setUpdateMode(false);
+          setSelectedOption(null);
+          setFormData({ name: "", type: "" });
         }}
-        title="Yeni Varyant Seçeneği">
-        <div className="space-y-4">
+        title={updateMode ? "Seçeneği Güncelle" : "Yeni Seçenek Ekle"}
+      >
+        <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tip <span className="text-red-500">*</span>
+              Tip
             </label>
             <select
               name="type"
               value={formData.type}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-4 py-2">
+              className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            >
               <option value="">Seçiniz</option>
               <option value="color">Renk</option>
               <option value="size">Beden</option>
@@ -126,32 +181,36 @@ const VariantOptions = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ad <span className="text-red-500">*</span>
+              Ad
             </label>
             <input
               type="text"
               name="name"
+              placeholder="Örn: Mavi"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-4 py-2"
-              placeholder="Örn: Mavi"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               İptal
             </Button>
-            <Button onClick={handleCreate}>Ekle</Button>
+            <Button onClick={handleSubmit}>
+              {updateMode ? "Güncelle" : "Ekle"}
+            </Button>
           </div>
         </div>
       </Modal>
 
+      {/* Modal: Silme Onayı */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Varyant Seçeneğini Sil">
+        title="Varyant Seçeneğini Sil"
+      >
         <p className="text-gray-700 mb-4">
-          <strong>{selectedOption?.name}</strong> seçeneğini silmek istediğinize emin misiniz?
+          <strong>{selectedOption?.name}</strong> adlı seçeneği silmek istediğinize emin misiniz?
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setDeleteModalOpen(false)}>
