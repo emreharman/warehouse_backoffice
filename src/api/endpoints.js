@@ -1,6 +1,6 @@
 // endpoints.js
 const ENDPOINTS = {
-    BASE_URL: 'http://localhost:3004/api',
+    BASE_URL: 'https://warehouse-backend-tg9f.onrender.com/api',
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
     CATEGORIES: '/categories',
