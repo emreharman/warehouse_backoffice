@@ -1,6 +1,7 @@
 import { supabase } from "../api/supabaseClient";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+import { v4 as uuidv4 } from "uuid"; // npm i uuid
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function uploadProductImage(file) {
   if (file.size > MAX_FILE_SIZE) {
@@ -8,7 +9,9 @@ export async function uploadProductImage(file) {
   }
 
   const fileExt = file.name.split(".").pop();
-  const fileName = `${Date.now()}.${fileExt}`;
+  const uniqueId = uuidv4().split("-")[0]; // kısa UUID parçası
+  const timestamp = Date.now();
+  const fileName = `product-${timestamp}-${uniqueId}.${fileExt}`;
   const filePath = `${fileName}`;
 
   const { data: uploadData, error: uploadError } = await supabase.storage
@@ -26,8 +29,6 @@ export async function uploadProductImage(file) {
   if (urlError) {
     throw urlError;
   }
-
-  console.log("publicUrl", data.publicUrl);
 
   return data.publicUrl;
 }
