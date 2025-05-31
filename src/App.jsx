@@ -8,6 +8,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Categories from "./pages/Categories";
 import Products from "./pages/Products";
 import VariantOptions from "./pages/VariantOptions"; // ✅ yeni sayfa import
+import Orders from "./pages/Orders";
+import OrderDetail from './pages/OrderDetail';
 
 const Dashboard = () => (
   <div className="bg-white border rounded-lg p-6 shadow-sm">
@@ -15,7 +17,6 @@ const Dashboard = () => (
     <p className="text-gray-600">Siparişleri ve içerikleri buradan yönetebilirsin.</p>
   </div>
 );
-const Orders = () => <h2>Siparişler Sayfası</h2>;
 
 function App() {
   return (
@@ -60,6 +61,16 @@ function App() {
           <ProtectedRoute>
             <DashboardLayout>
               <Orders />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders/:id"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <OrderDetail />
             </DashboardLayout>
           </ProtectedRoute>
         }

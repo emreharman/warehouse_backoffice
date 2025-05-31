@@ -6,12 +6,14 @@ import authReducer from "./reducers/authReducer";
 import categoryReducer from "./reducers/categoryReducer";
 import productReducer from "./reducers/productReducer";
 import variantOptionReducer from "./reducers/variantOptionReducer";
+import orderReducer from "./reducers/orderReducer";
 
 const rootReducer = combineReducers({
   auth: authReducer,
   categories: categoryReducer,
   products: productReducer,
-  variantOptions: variantOptionReducer
+  variantOptions: variantOptionReducer,
+  orders: orderReducer
 });
 
 const store = createStore(
