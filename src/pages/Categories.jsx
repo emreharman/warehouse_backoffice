@@ -13,9 +13,11 @@ import LoadingSpinner from "../components/LoadingSpinner";
 const Categories = () => {
   const dispatch = useDispatch();
 
-  const { data: categories, loading, error } = useSelector(
-    (state) => state.categories
-  );
+  const {
+    data: categories,
+    loading,
+    error,
+  } = useSelector((state) => state.categories);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -25,6 +27,7 @@ const Categories = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    displayOrder: "",
   });
 
   useEffect(() => {
@@ -39,8 +42,7 @@ const Categories = () => {
   };
 
   const handleSubmit = async () => {
-    const name = formData.name.trim();
-    const description = formData.description.trim();
+    const { name, description, displayOrder } = formData;
 
     if (!name) return;
 
@@ -56,9 +58,21 @@ const Categories = () => {
     }
 
     if (updateMode && selectedCategory) {
-      await dispatch(editCategory(selectedCategory._id, { name, description }));
+      await dispatch(
+        editCategory(selectedCategory._id, {
+          name,
+          description,
+          displayOrder: parseInt(displayOrder) || 0,
+        })
+      );
     } else {
-      await dispatch(addCategory({ name, description }));
+      await dispatch(
+        addCategory({
+          name,
+          description,
+          displayOrder: parseInt(displayOrder) || 0,
+        })
+      );
     }
 
     setFormData({ name: "", description: "" });
@@ -71,6 +85,7 @@ const Categories = () => {
     setFormData({
       name: category.name,
       description: category.description || "",
+      displayOrder: category.displayOrder?.toString() || "",
     });
     setSelectedCategory(category);
     setUpdateMode(true);
@@ -100,8 +115,7 @@ const Categories = () => {
             setUpdateMode(false);
             setFormData({ name: "", description: "" });
             setSelectedCategory(null);
-          }}
-        >
+          }}>
           + Yeni Kategori
         </Button>
       </div>
@@ -120,6 +134,7 @@ const Categories = () => {
                 <th className="px-4 py-2">#</th>
                 <th className="px-4 py-2">Ad</th>
                 <th className="px-4 py-2">Açıklama</th>
+                <th className="px-4 py-2">Sıra</th>
                 <th className="px-4 py-2">ID</th>
                 <th className="px-4 py-2 text-right">İşlemler</th>
               </tr>
@@ -132,16 +147,19 @@ const Categories = () => {
                   <td className="px-4 py-2 text-gray-600">
                     {category.description || "-"}
                   </td>
+                  <td className="px-4 py-2 text-gray-600">{category.displayOrder ?? "-"}</td>
                   <td className="px-4 py-2 text-gray-500">{category._id}</td>
                   <td className="px-4 py-2 text-right space-x-2">
-                    <Button variant="soft" size="sm" onClick={() => handleEdit(category)}>
+                    <Button
+                      variant="soft"
+                      size="sm"
+                      onClick={() => handleEdit(category)}>
                       Düzenle
                     </Button>
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() => confirmDelete(category)}
-                    >
+                      onClick={() => confirmDelete(category)}>
                       Sil
                     </Button>
                   </td>
@@ -163,8 +181,7 @@ const Categories = () => {
           setSelectedCategory(null);
           setFormData({ name: "", description: "" });
         }}
-        title={updateMode ? "Kategoriyi Güncelle" : "Yeni Kategori Oluştur"}
-      >
+        title={updateMode ? "Kategoriyi Güncelle" : "Yeni Kategori Oluştur"}>
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -192,6 +209,19 @@ const Categories = () => {
               className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Görüntülenme Sırası
+            </label>
+            <input
+              type="number"
+              name="displayOrder"
+              placeholder="0"
+              value={formData.displayOrder}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            />
+          </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               İptal
@@ -209,8 +239,7 @@ const Categories = () => {
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Kategoriyi Sil"
-      >
+        title="Kategoriyi Sil">
         <p className="text-gray-700 mb-4">
           <strong>{selectedCategory?.name}</strong> adlı kategoriyi silmek
           istediğinize emin misiniz?
