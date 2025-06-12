@@ -49,7 +49,7 @@ const OrderDetail = () => {
       <h1 className="text-2xl font-bold text-gray-800">Sipariş Detayı</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-        <div>
+        <div className="mt-2">
           <strong>Sipariş No:</strong> #{order._id}
         </div>
         <div>
